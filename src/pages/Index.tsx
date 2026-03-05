@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AppLayout from '@/components/layout/AppLayout'
 import { healthCheck } from '@/services/api'
 import { handleError } from '@/middleware/error-handler'
+import { useAuth } from '@/contexts/AuthContext'
 
 const Index = () => {
   const [healthStatus, setHealthStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const { user } = useAuth()
 
   const checkHealth = async () => {
     setLoading(true)
@@ -26,8 +29,20 @@ const Index = () => {
     <AppLayout>
       <div className="flex flex-col items-center justify-center flex-1 p-8 gap-8 min-h-[80vh]">
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Phase 0 — Infrastructure</h2>
-          <p className="text-muted-foreground">Database connected · Auth enabled · Edge functions ready</p>
+          <h2 className="text-3xl font-bold tracking-tight">Phase 1 — Auth & Roles</h2>
+          <p className="text-muted-foreground">Database · Auth · Role-based dashboards</p>
+          <div className="flex gap-3 justify-center pt-2">
+            {user ? (
+              <Link to="/dashboard">
+                <Button>Go to Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login"><Button>Sign in</Button></Link>
+                <Link to="/signup"><Button variant="outline">Sign up</Button></Link>
+              </>
+            )}
+          </div>
         </div>
 
         <Card className="w-full max-w-md">
