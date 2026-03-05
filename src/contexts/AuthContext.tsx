@@ -72,19 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string, role: 'tenant' | 'landlord') => {
-    // The DB trigger auto-creates profile + assigns 'tenant' role.
-    // If landlord, we update the role after signup.
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    // Pass role in user metadata so the DB trigger picks it up
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { role } },
+    })
     if (error) throw error
-
-    if (role === 'landlord' && data.user) {
-      // Update the auto-assigned tenant role to landlord
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({ role: 'landlord' })
-        .eq('user_id', data.user.id)
-      if (roleError) throw roleError
-    }
   }
 
   const signIn = async (email: string, password: string) => {
