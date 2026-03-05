@@ -73,12 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, role: 'tenant' | 'landlord') => {
     // Pass role in user metadata so the DB trigger picks it up
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { role } },
     })
     if (error) throw error
+
+    // Fallback: if trigger defaulted to tenant, immediately update own role.
+    // RLS only allows tenant/landlord updates for the authenticated user.
+    if (data.user && role === 'landlord') {
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: 'landlord' })
+        .eq('user_id', data.user.id)
+      if (roleError) throw roleError
+    }
   }
 
   const signIn = async (email: string, password: string) => {
