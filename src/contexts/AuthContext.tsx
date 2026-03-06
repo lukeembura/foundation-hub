@@ -44,15 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const user = session?.user ?? null
-        let role: AppRole | null = null
         if (user) {
-          // Use setTimeout to avoid Supabase deadlock
+          // Set role to null immediately — never reuse previous user's role
+          setState(prev => ({ ...prev, session, user, role: null, loading: false }))
+          // Fetch role async to avoid Supabase deadlock
           setTimeout(async () => {
-            role = await fetchUserRole(user.id)
-            setState({ session, user, role, loading: false })
+            const fetchedRole = await fetchUserRole(user.id)
+            setState(prev => (prev.user?.id === user.id ? { ...prev, role: fetchedRole } : prev))
           }, 0)
-          // Set immediately without role, then update
-          setState(prev => ({ ...prev, session, user, loading: false }))
         } else {
           setState({ session: null, user: null, role: null, loading: false })
         }
